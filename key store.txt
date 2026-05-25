@@ -1,0 +1,26 @@
+
+Generating 2,048 bit RSA key pair and self-signed certificate (SHA256withRSA) with a validity of 10,000 days
+        for: CN="Jessy ", OU=Williams, O=Bossproductions, L=Auckland City, ST=Auckland, C=NZ
+[Storing android\app\compass-pro-release.jks]
+
+
+
+PS C:\Users\jesse\Desktop\compass_pro> keytool -genkey -v -keystore android\app\compass-pro-release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias compass-pro
+Enter keystore password:  
+
+Re-enter new password:JessyBeatsThemAll44$
+
+What is your first and last name?
+  [Unknown]:  Jessy 
+What is the name of your organizational unit?
+  [Unknown]:  Williams
+What is the name of your organization?
+  [Unknown]:  Bossproductions
+What is the name of your City or Locality?
+  [Unknown]:  Auckland City
+What is the name of your State or Province?
+  [Unknown]:  Auckland
+What is the two-letter country code for this unit?
+  [Unknown]:  NZ
+Is CN="Jessy ", OU=Williams, O=Bossproductions, L=Auckland City, ST=Auckland, C=NZ correct?
+  [no]:

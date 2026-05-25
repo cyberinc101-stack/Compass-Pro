@@ -1,0 +1,78 @@
+name: compass_pro
+description: Professional compass application with advanced features
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Core compass & sensors
+  flutter_compass: ^0.8.0
+  sensors_plus: ^6.1.1
+
+  # Location — pick ONE (removed duplicate 'location' package)
+  geolocator: ^12.0.0
+  permission_handler: ^11.3.1
+  geocoding: ^3.0.0
+
+  # Maps — free, no billing required
+  flutter_map: ^6.1.0
+  latlong2: ^0.9.1
+
+  # Camera & hardware
+  camera: ^0.10.5+9
+  torch_light: ^1.0.0
+
+  # Background service
+  flutter_background_service: ^5.0.5
+
+  # State management & persistence
+  provider: ^6.1.2
+  shared_preferences: ^2.3.2
+  sqflite: ^2.3.3+1
+  path_provider: ^2.1.3
+
+  # Firebase — all must be same major version
+  firebase_core: ^3.6.0
+  firebase_analytics: ^11.3.3
+  firebase_crashlytics: ^4.1.3
+
+  # In-app purchases
+  in_app_purchase: ^3.2.0
+
+  # UI
+  flutter_svg: ^2.0.10+1
+  animated_text_kit: ^4.2.2
+  shimmer: ^3.0.0
+  flutter_animate: ^4.5.0
+
+  # Networking & utilities
+  http: ^1.2.2
+  url_launcher: ^6.3.0
+  share_plus: ^10.0.0
+  intl: ^0.19.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.14.1
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/icons/
+    - assets/images/
+    - assets/fonts/
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/compass-icon-professional.png"
+  adaptive_icon_background: "#000000"
+  adaptive_icon_foreground: "assets/icons/compass-icon-professional.png"
+  remove_alpha_ios: true
