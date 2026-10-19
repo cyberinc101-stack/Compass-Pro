@@ -138,87 +138,49 @@ class _BackgroundSelectorScreenState extends State<BackgroundSelectorScreen> {
     }
   }
 
-  /// Returns the two gradient colours used for the screen background,
-  /// driven entirely by [SettingsService.iconThemeMode].
   List<Color> _screenGradient(String themeMode) {
     switch (themeMode) {
-      case 'night':
-        // Deep red-tinted dark background for night vision
-        return const [Color(0xFF1a0000), Color(0xFF2d0000)];
-      case 'glow':
-        // Deep teal-green for glow mode
-        return const [Color(0xFF001a0d), Color(0xFF003320)];
-      case 'day':
-      default:
-        return const [Color(0xFF4A90E2), Color(0xFF63B3ED)];
+      case 'night': return const [Color(0xFF1a0000), Color(0xFF2d0000)];
+      case 'glow':  return const [Color(0xFF001a0d), Color(0xFF003320)];
+      default:      return const [Color(0xFF4A90E2), Color(0xFF63B3ED)];
     }
   }
 
-  /// Colour for the card label strip at the bottom of each grid tile.
   Color _cardLabelBackground(bool isSelected, String themeMode, Color iconColor) {
     if (isSelected) return iconColor;
     switch (themeMode) {
-      case 'night':
-        return const Color(0xFF2d0000);
-      case 'glow':
-        return const Color(0xFF001a0d);
-      case 'day':
-      default:
-        return const Color(0xFF1a2a3a);
+      case 'night': return const Color(0xFF2d0000);
+      case 'glow':  return const Color(0xFF001a0d);
+      default:      return const Color(0xFF1a2a3a);
     }
   }
 
-  /// Text colour inside the card label strip.
-  Color _cardLabelText(bool isSelected, String themeMode, Color iconColor) {
-    if (isSelected) {
-      // Make selected label text legible against the accent colour
-      switch (themeMode) {
-        case 'night':
-          return Colors.black;
-        case 'glow':
-          return Colors.black;
-        case 'day':
-        default:
-          return Colors.white;
-      }
-    }
-    // Unselected: use the theme's text colour (already bright enough)
+  /// Selected label text is always black for readability on any accent colour.
+  Color _cardLabelText(bool isSelected, String themeMode) {
+    if (isSelected) return Colors.black;
     switch (themeMode) {
-      case 'night':
-        return const Color(0xFFFF4444);
-      case 'glow':
-        return const Color(0xFF00FFAA);
-      case 'day':
-      default:
-        return Colors.white;
+      case 'night': return const Color(0xFFFF4444);
+      case 'glow':  return const Color(0xFF00FFAA);
+      default:      return Colors.white;
     }
   }
 
-  Color _cardSubText(bool isSelected, String themeMode, Color iconColor) {
-    if (isSelected) {
-      return _cardLabelText(true, themeMode, iconColor).withOpacity(0.75);
-    }
+  /// Selected sub-text is always black at 70% opacity.
+  Color _cardSubText(bool isSelected, String themeMode) {
+    if (isSelected) return Colors.black.withOpacity(0.7);
     switch (themeMode) {
-      case 'night':
-        return const Color(0xFFFF4444).withOpacity(0.6);
-      case 'glow':
-        return const Color(0xFF00FFAA).withOpacity(0.6);
-      case 'day':
-      default:
-        return Colors.white60;
+      case 'night': return const Color(0xFFFF4444).withOpacity(0.6);
+      case 'glow':  return const Color(0xFF00FFAA).withOpacity(0.6);
+      default:      return Colors.white60;
     }
   }
 
   Color _borderColor(bool isSelected, String themeMode, Color iconColor) {
     if (isSelected) return iconColor;
     switch (themeMode) {
-      case 'night':
-        return const Color(0xFFFF3333).withOpacity(0.25);
-      case 'glow':
-        return const Color(0xFF00FF88).withOpacity(0.25);
-      case 'day':
-      default:
-        return Colors.white.withOpacity(0.3);
+      case 'night': return const Color(0xFFFF3333).withOpacity(0.25);
+      case 'glow':  return const Color(0xFF00FF88).withOpacity(0.25);
+      default:      return Colors.white.withOpacity(0.3);
     }
   }
 
@@ -269,10 +231,7 @@ class _BackgroundSelectorScreenState extends State<BackgroundSelectorScreen> {
                         const SizedBox(height: 4),
                         Text(
                           localization.translate('select_preferred_style'),
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: textColorMuted,
-                          ),
+                          style: TextStyle(fontSize: 14, color: textColorMuted),
                         ),
                       ],
                     ),
@@ -295,14 +254,10 @@ class _BackgroundSelectorScreenState extends State<BackgroundSelectorScreen> {
                         final style = backgroundStyles[index];
                         final isSelected = selectedBackground == style.id;
 
-                        final cardBorder =
-                            _borderColor(isSelected, themeMode, iconColor);
-                        final labelBg = _cardLabelBackground(
-                            isSelected, themeMode, iconColor);
-                        final labelText =
-                            _cardLabelText(isSelected, themeMode, iconColor);
-                        final subText =
-                            _cardSubText(isSelected, themeMode, iconColor);
+                        final cardBorder = _borderColor(isSelected, themeMode, iconColor);
+                        final labelBg = _cardLabelBackground(isSelected, themeMode, iconColor);
+                        final labelText = _cardLabelText(isSelected, themeMode);
+                        final subText = _cardSubText(isSelected, themeMode);
 
                         return GestureDetector(
                           onTap: () async {
@@ -328,25 +283,10 @@ class _BackgroundSelectorScreenState extends State<BackgroundSelectorScreen> {
                           child: Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: cardBorder,
-                                width: isSelected ? 3 : 1,
-                              ),
+                              border: Border.all(color: cardBorder, width: isSelected ? 3 : 1),
                               boxShadow: isSelected
-                                  ? [
-                                      BoxShadow(
-                                        color: iconColor.withOpacity(0.35),
-                                        blurRadius: 16,
-                                        spreadRadius: 2,
-                                      ),
-                                    ]
-                                  : [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.2),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 5),
-                                      ),
-                                    ],
+                                  ? [BoxShadow(color: iconColor.withOpacity(0.35), blurRadius: 16, spreadRadius: 2)]
+                                  : [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 5))],
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(18),
@@ -363,11 +303,8 @@ class _BackgroundSelectorScreenState extends State<BackgroundSelectorScreen> {
                                         ),
                                       ),
                                       child: Center(
-                                        child: Icon(
-                                          style.icon,
-                                          size: 48,
-                                          color: Colors.white.withOpacity(0.6),
-                                        ),
+                                        child: Icon(style.icon, size: 48,
+                                            color: Colors.white.withOpacity(0.6)),
                                       ),
                                     ),
                                   ),
@@ -375,8 +312,7 @@ class _BackgroundSelectorScreenState extends State<BackgroundSelectorScreen> {
                                   // Label strip
                                   Container(
                                     width: double.infinity,
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 12),
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
                                     decoration: BoxDecoration(
                                       color: labelBg,
                                       borderRadius: const BorderRadius.only(
@@ -397,19 +333,13 @@ class _BackgroundSelectorScreenState extends State<BackgroundSelectorScreen> {
                                         const SizedBox(height: 4),
                                         Text(
                                           style.description,
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            color: subText,
-                                          ),
+                                          style: TextStyle(fontSize: 11, color: subText),
                                           textAlign: TextAlign.center,
                                         ),
                                         if (isSelected) ...[
                                           const SizedBox(height: 4),
-                                          Icon(
-                                            Icons.check_circle,
-                                            color: labelText,
-                                            size: 20,
-                                          ),
+                                          const Icon(Icons.check_circle,
+                                              color: Colors.black, size: 20),
                                         ],
                                       ],
                                     ),
@@ -432,25 +362,16 @@ class _BackgroundSelectorScreenState extends State<BackgroundSelectorScreen> {
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
-                    onTap: () {
-                      if (mounted) Navigator.pop(context, selectedBackground);
-                    },
+                    onTap: () { if (mounted) Navigator.pop(context, selectedBackground); },
                     borderRadius: BorderRadius.circular(30),
                     child: Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: iconColor.withOpacity(0.15),
                         shape: BoxShape.circle,
-                        border: Border.all(
-                          color: iconColor.withOpacity(0.4),
-                          width: 1,
-                        ),
+                        border: Border.all(color: iconColor.withOpacity(0.4), width: 1),
                       ),
-                      child: Icon(
-                        Icons.arrow_back,
-                        color: iconColor,
-                        size: 24,
-                      ),
+                      child: Icon(Icons.arrow_back, color: iconColor, size: 24),
                     ),
                   ),
                 ),

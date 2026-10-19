@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../services/settings_service.dart';
 import '../services/compass_service.dart';
 import '../services/location_service.dart';
+import '../services/ad_service.dart';
 import 'home_screen.dart';
 
 class LoadingScreen extends StatefulWidget {
@@ -110,45 +111,16 @@ class _LoadingScreenState extends State<LoadingScreen> with SingleTickerProvider
 
       _hasNavigated = true;
 
-      print('🏠 LOADING: Navigating to Home Screen with fade transition');
-      
       // Add longer delay to ensure everything is truly ready
       await Future.delayed(const Duration(milliseconds: 400));
-      
+
       if (!mounted) return;
-      
-      // Very slow fade transition to completely mask any loading states
-      await Navigator.of(context).pushReplacement(
-        PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) => HomeScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            // Smooth fade with slight scale - slower curve
-            const begin = 0.90;
-            const end = 1.0;
-            final scaleTween = Tween(begin: begin, end: end);
-            
-            // Use a slower, smoother curve
-            final curvedAnimation = CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeInOutCubic,
-            );
-            
-            final scaleAnimation = curvedAnimation.drive(scaleTween);
-            
-            return FadeTransition(
-              opacity: curvedAnimation,
-              child: ScaleTransition(
-                scale: scaleAnimation,
-                child: child,
-              ),
-            );
-          },
-          transitionDuration: const Duration(milliseconds: 1500),
-          reverseTransitionDuration: const Duration(milliseconds: 1000),
-        ),
-      );
-      
-      print('✅ LOADING: Navigation complete');
+
+      // Show the preloaded App Open ad (if ready) before entering Home.
+      // showAppOpenAdIfAvailable always calls onDismissed exactly once —
+      // immediately if there's no ad, or after the ad is closed.
+      final adService = Provider.of<AdService>(context, listen: false);
+      adService.showAppOpenAdIfAvailable(onDismissed: _goToHome);
       
     } catch (e) {
       print('❌ LOADING: Error during initialization: $e');
@@ -157,24 +129,46 @@ class _LoadingScreenState extends State<LoadingScreen> with SingleTickerProvider
       if (!_hasNavigated && mounted) {
         await Future.delayed(const Duration(milliseconds: 1000));
         _hasNavigated = true;
-        Navigator.of(context).pushReplacement(
-          PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) => HomeScreen(),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              final curvedAnimation = CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeInOutCubic,
-              );
-              return FadeTransition(
-                opacity: curvedAnimation,
-                child: child,
-              );
-            },
-            transitionDuration: const Duration(milliseconds: 1500),
-          ),
-        );
+        _goToHome();
       }
     }
+  }
+
+  void _goToHome() {
+    if (!mounted) return;
+
+    print('🏠 LOADING: Navigating to Home Screen with fade transition');
+
+    // Very slow fade transition to completely mask any loading states
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => HomeScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          // Smooth fade with slight scale - slower curve
+          const begin = 0.90;
+          const end = 1.0;
+          final scaleTween = Tween(begin: begin, end: end);
+
+          // Use a slower, smoother curve
+          final curvedAnimation = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeInOutCubic,
+          );
+
+          final scaleAnimation = curvedAnimation.drive(scaleTween);
+
+          return FadeTransition(
+            opacity: curvedAnimation,
+            child: ScaleTransition(
+              scale: scaleAnimation,
+              child: child,
+            ),
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 1500),
+        reverseTransitionDuration: const Duration(milliseconds: 1000),
+      ),
+    ).then((_) => print('✅ LOADING: Navigation complete'));
   }
 
   @override

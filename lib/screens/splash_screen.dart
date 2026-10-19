@@ -16,12 +16,14 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   late Animation<double> _scaleAnimation;
   late Animation<double> _rotateAnimation;
 
+  bool _hasNavigated = false;
+
   @override
   void initState() {
     super.initState();
-    
+
     print('🚀 SPLASH SCREEN: initState called');
-    
+
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2000),
@@ -56,7 +58,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   Future<void> _checkFirstLaunch() async {
     print('⏳ SPLASH: Waiting 2.5 seconds...');
     await Future.delayed(const Duration(milliseconds: 2500));
-    
+
     print('✅ SPLASH: Delay complete, checking mounted');
     if (!mounted) {
       print('❌ SPLASH: Widget not mounted, returning');
@@ -76,6 +78,17 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       return;
     }
 
+    // First launch: LanguageSelectorScreen fires the interstitial itself
+    // (after the user picks a language and taps Continue), before Loading.
+    // Every subsequent launch: go straight to Home — no ad gate anymore.
+    // (Banner ads, the every-5-nav interstitial, and the App Open ad on
+    // resume-from-background are untouched — see AdService.)
+    if (_hasNavigated) return;
+    _hasNavigated = true;
+    _navigateNext(hasSeenLanguageSelector, currentLanguage);
+  }
+
+  void _navigateNext(bool hasSeenLanguageSelector, String currentLanguage) {
     if (!hasSeenLanguageSelector) {
       print('🌍 SPLASH: First launch detected - navigating to Language Selector');
       try {
@@ -95,7 +108,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
         print('❌ SPLASH: Error navigating to Language Selector: $e');
       }
     } else {
-      print('🏠 SPLASH: Not first launch - navigating to Home Screen');
+      print('🚦 SPLASH: Returning user - navigating straight to Home (no ad gate)');
       try {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
@@ -105,9 +118,9 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
             },
           ),
         );
-        print('✅ SPLASH: Navigation to Home Screen initiated');
+        print('✅ SPLASH: Navigation to Home initiated');
       } catch (e) {
-        print('❌ SPLASH: Error navigating to Home Screen: $e');
+        print('❌ SPLASH: Error navigating to Home: $e');
       }
     }
   }
@@ -139,7 +152,6 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
         ),
         child: Stack(
           children: [
-            // Animated background circles
             Positioned(
               top: -100,
               right: -100,
@@ -180,13 +192,10 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                 ),
               ),
             ),
-
-            // Main content
             Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Animated compass icon with actual image
                   ScaleTransition(
                     scale: _scaleAnimation,
                     child: RotationTransition(
@@ -220,10 +229,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 40),
-
-                  // App name
                   FadeTransition(
                     opacity: _fadeAnimation,
                     child: const Text(

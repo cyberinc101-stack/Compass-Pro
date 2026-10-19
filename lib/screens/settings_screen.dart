@@ -7,13 +7,15 @@ import '../services/settings_service.dart';
 import '../services/premium_service.dart';
 import '../services/localization_service.dart';
 import '../services/location_service.dart';
+import '../widgets/my_apps_dropdown.dart';
 import 'language_selector_screen.dart';
+import 'membership_screen.dart';
 import 'privacy_policy_screen.dart';
 import 'terms_of_service_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   final VoidCallback? onBackToCompass;
-  
+
   const SettingsScreen({Key? key, this.onBackToCompass}) : super(key: key);
 
   @override
@@ -74,10 +76,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final settings = Provider.of<SettingsService>(context);
-    final premium = Provider.of<PremiumService>(context);
+    final settings     = Provider.of<SettingsService>(context);
+    final premium      = Provider.of<PremiumService>(context);
     final localization = Provider.of<LocalizationService>(context);
-    final themeMode = settings.iconThemeMode;
+    final themeMode    = settings.iconThemeMode;
 
     final textColor = themeMode == 'day'
         ? Colors.black87
@@ -91,6 +93,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ? const Color(0xFF1E2A3A)
             : Colors.white.withOpacity(0.95);
     final cardElevation = themeMode == 'day' ? 4.0 : 0.0;
+
+    // isDark for the dropdown: anything that isn't the bright day theme
+    final isDark = themeMode != 'day';
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -235,7 +240,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                         const Divider(),
 
-                        // Info Cards master toggle
                         _buildSwitchListTile(
                           icon: Icons.info_outline,
                           title: localization.translate('show_info_cards'),
@@ -246,7 +250,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           iconColor: iconColor,
                         ),
 
-                        // Individual info card toggles — speed and tracking-only cards removed
                         if (settings.showInfoCards) ...[
                           Padding(
                             padding: const EdgeInsets.only(left: 16, top: 8, bottom: 4),
@@ -282,7 +285,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                           _buildSwitchListTile(
                             title: localization.translate('bearing'),
-                            subtitle: localization.translate('compass_heading_card'),
+                            subtitle: localization.translate('current_altitude_card'),
                             value: settings.showBearing,
                             onChanged: (value) => settings.setShowBearing(value),
                             textColor: textColor,
@@ -307,8 +310,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             iconColor: iconColor,
                             contentPadding: const EdgeInsets.only(left: 56, right: 16),
                           ),
-                          // Tracking-only cards section (Speed, Distance, Max Speed, Avg Speed,
-                          // Moving Time) has been removed from this settings panel.
                         ],
                       ],
                     ),
@@ -423,6 +424,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                   const SizedBox(height: 20),
 
+                  // ── Premium ─────────────────────────────────────────────
+                  _buildSectionHeader(localization.translate('premium'), textColor),
+                  Card(
+                    elevation: cardElevation,
+                    color: cardBackgroundColor,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    child: _buildListTile(
+                      icon: Icons.workspace_premium,
+                      title: premium.isPremium
+                          ? localization.translate('pro_member')
+                          : localization.translate('go_pro_remove_ads'),
+                      subtitle: premium.isPremium
+                          ? (premium.subscriptionType == 'yearly'
+                              ? localization.translate('yearly_plan_active')
+                              : localization.translate('monthly_plan_active'))
+                          : localization.translate('go_pro_subtitle'),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const MembershipScreen(),
+                          ),
+                        );
+                      },
+                      textColor: textColor,
+                      iconColor: premium.isPremium
+                          ? const Color(0xFF00C853)
+                          : const Color(0xFFFFB300),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
                   // ── Data & Privacy ──────────────────────────────────────
                   _buildSectionHeader(localization.translate('data_privacy'), textColor),
                   Card(
@@ -442,14 +476,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         _buildListTile(
                           icon: Icons.privacy_tip,
                           title: localization.translate('privacy_policy'),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const PrivacyPolicyScreen(),
-                              ),
-                            );
-                          },
+                          onTap: () async { final u = Uri.parse('https://YOUR-USERNAME.github.io/happyappsforyou-policies/compass-pro/'); if (!await launchUrl(u, mode: LaunchMode.externalApplication) && context.mounted) { Navigator.push(context, MaterialPageRoute(builder: (context) => const PrivacyPolicyScreen())); } },
                           textColor: textColor,
                           iconColor: iconColor,
                         ),
@@ -489,6 +516,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           iconColor: iconColor,
                         ),
                       ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // ── More Apps ───────────────────────────────────────────
+                  _buildSectionHeader('More Apps'.toUpperCase(), textColor),
+                  Card(
+                    elevation: cardElevation,
+                    color: cardBackgroundColor,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    clipBehavior: Clip.antiAlias,
+                    child: MyAppsDropdown(
+                      currentAppId: AppId.compassPro,
+                      isDark: isDark,
+                      style: MyAppsDropdownStyle(
+                        // Day: dark text on white card
+                        textColorLight: Colors.black87,
+                        subtleTextColorLight: Colors.black54,
+                        cardColorLight: Colors.transparent,
+                        borderColorLight: Colors.transparent,
+                        // Glow/Night: light text on dark card
+                        textColorDark: Colors.white,
+                        subtleTextColorDark: Colors.white60,
+                        cardColorDark: Colors.transparent,
+                        borderColorDark: Colors.transparent,
+                        // Accent follows the app's current icon colour
+                        accentColor: iconColor,
+                        borderRadius: 16,
+                        titleWeight: FontWeight.w600,
+                        titleFontSize: 15,
+                      ),
                     ),
                   ),
 
@@ -621,7 +680,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required Color iconColor,
     EdgeInsetsGeometry? contentPadding,
   }) {
-    final settings = Provider.of<SettingsService>(context, listen: false);
+    final settings  = Provider.of<SettingsService>(context, listen: false);
     final themeMode = settings.iconThemeMode;
 
     return SwitchListTile(
@@ -657,7 +716,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         }
         return null;
       }),
-      contentPadding: contentPadding ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      contentPadding:
+          contentPadding ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
     );
   }
 
@@ -1052,7 +1112,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _composeEmail(BuildContext context, LocalizationService localization) async {
-    const supportEmail = 'cyberinc101@gmail.com';
+    const supportEmail = 'bossproductions86@gmail.com';
     const appName = 'Compass Safe Pro';
     final emailUri = Uri(
       scheme: 'mailto',

@@ -9,14 +9,14 @@ import 'services/location_service.dart';
 import 'services/settings_service.dart';
 import 'services/saved_locations_service.dart';
 import 'services/tracking_service.dart';
-import 'services/localization_service.dart'; // ← ADD THIS IMPORT
+import 'services/localization_service.dart';
+import 'services/ad_service.dart';
 import 'screens/splash_screen.dart';
 import 'utils/theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Lock orientation
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
@@ -24,34 +24,71 @@ void main() async {
 
   final prefs = await SharedPreferences.getInstance();
 
-  // TEMPORARY FIX: Clear language selector flag to test it
-  // REMOVE THESE 3 LINES after you've seen the language selector work once!
+  // TEMPORARY: Remove after language selector has been seen once
   await prefs.remove('has_seen_language_selector');
-  print('🔧 MAIN: Cleared has_seen_language_selector flag for testing');
-  print('🔍 MAIN: After clear - has_seen_language_selector = ${prefs.getBool('has_seen_language_selector')}');
 
-  // Initialize LocationService once
   final locationService = LocationService();
   await locationService.initialize();
+
+  // Initialise both services before runApp
+  final premiumService = PremiumService();
+  await premiumService.initialize();
+
+  final adService = AdService();
+  await adService.initialize();
+
+  // Sync initial state
+  adService.setPremium(premiumService.noAds);
+
+  // Keep AdService in sync whenever premium status changes —
+  // no ProxyProvider needed, just a plain listener
+  premiumService.addListener(() {
+    adService.setPremium(premiumService.noAds);
+  });
 
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => PremiumService()),
+        ChangeNotifierProvider<PremiumService>.value(value: premiumService),
+        ChangeNotifierProvider<AdService>.value(value: adService),
         ChangeNotifierProvider(create: (_) => CompassService()),
         ChangeNotifierProvider.value(value: locationService),
         ChangeNotifierProvider(create: (_) => SettingsService(prefs)),
         ChangeNotifierProvider(create: (_) => SavedLocationsService(prefs)),
         ChangeNotifierProvider(create: (_) => TrackingService()),
-        ChangeNotifierProvider(create: (_) => LocalizationService()), // ← ADD THIS LINE
+        ChangeNotifierProvider(create: (_) => LocalizationService()),
       ],
       child: const CompassProApp(),
     ),
   );
 }
 
-class CompassProApp extends StatelessWidget {
+class CompassProApp extends StatefulWidget {
   const CompassProApp({Key? key}) : super(key: key);
+
+  @override
+  State<CompassProApp> createState() => _CompassProAppState();
+}
+
+class _CompassProAppState extends State<CompassProApp> {
+  AppOpenAdLifecycleReactor? _appOpenReactor;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Only wire this up once — didChangeDependencies can fire more than once.
+    if (_appOpenReactor == null) {
+      final adService = Provider.of<AdService>(context, listen: false);
+      _appOpenReactor = AppOpenAdLifecycleReactor(adService)
+        ..listenToAppStateChanges();
+    }
+  }
+
+  @override
+  void dispose() {
+    _appOpenReactor?.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,9 +97,7 @@ class CompassProApp extends StatelessWidget {
         return MaterialApp(
           title: 'Compass Safe Pro',
           debugShowCheckedModeBanner: false,
-          theme: settings.isDarkMode
-              ? AppTheme.darkTheme
-              : AppTheme.lightTheme,
+          theme: settings.isDarkMode ? AppTheme.darkTheme : AppTheme.lightTheme,
           home: const SplashScreen(),
         );
       },

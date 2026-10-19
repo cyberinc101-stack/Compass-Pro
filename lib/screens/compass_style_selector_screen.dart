@@ -133,96 +133,57 @@ class _CompassStyleSelectorScreenState
     await prefs.setString('compass_style', styleId);
   }
 
-  /// Screen background gradient — matches background_selector_screen.dart
   List<Color> _screenGradient(String themeMode) {
     switch (themeMode) {
-      case 'night':
-        return const [Color(0xFF1a0000), Color(0xFF2d0000)];
-      case 'glow':
-        return const [Color(0xFF001a0d), Color(0xFF003320)];
-      case 'day':
-      default:
-        return const [Color(0xFF4A90E2), Color(0xFF63B3ED)];
+      case 'night': return const [Color(0xFF1a0000), Color(0xFF2d0000)];
+      case 'glow':  return const [Color(0xFF001a0d), Color(0xFF003320)];
+      default:      return const [Color(0xFF4A90E2), Color(0xFF63B3ED)];
     }
   }
 
-  /// Card preview area background
   Color _cardPreviewBackground(String themeMode) {
     switch (themeMode) {
-      case 'night':
-        return const Color(0xFF2d0000);
-      case 'glow':
-        return const Color(0xFF001a0d);
-      case 'day':
-      default:
-        return Colors.white.withOpacity(0.95);
+      case 'night': return const Color(0xFF2d0000);
+      case 'glow':  return const Color(0xFF001a0d);
+      default:      return Colors.white.withOpacity(0.95);
     }
   }
 
-  /// Card label strip background (unselected)
   Color _cardLabelBackground(bool isSelected, String themeMode, Color iconColor) {
     if (isSelected) return iconColor;
     switch (themeMode) {
-      case 'night':
-        return const Color(0xFF2d0000);
-      case 'glow':
-        return const Color(0xFF001a0d);
-      case 'day':
-      default:
-        return const Color(0xFF1a2a3a);
+      case 'night': return const Color(0xFF2d0000);
+      case 'glow':  return const Color(0xFF001a0d);
+      default:      return const Color(0xFF1a2a3a);
     }
   }
 
-  /// Primary text colour inside the label strip
-  Color _cardLabelText(bool isSelected, String themeMode, Color iconColor) {
-    if (isSelected) {
-      switch (themeMode) {
-        case 'night':
-        case 'glow':
-          return Colors.black;
-        case 'day':
-        default:
-          return Colors.white;
-      }
-    }
+  /// Selected label text is always black so it reads on any accent colour.
+  Color _cardLabelText(bool isSelected, String themeMode) {
+    if (isSelected) return Colors.black;
     switch (themeMode) {
-      case 'night':
-        return const Color(0xFFFF4444);
-      case 'glow':
-        return const Color(0xFF00FFAA);
-      case 'day':
-      default:
-        return Colors.white;
+      case 'night': return const Color(0xFFFF4444);
+      case 'glow':  return const Color(0xFF00FFAA);
+      default:      return Colors.white;
     }
   }
 
-  /// Secondary/description text colour inside the label strip
-  Color _cardSubText(bool isSelected, String themeMode, Color iconColor) {
-    if (isSelected) {
-      return _cardLabelText(true, themeMode, iconColor).withOpacity(0.75);
-    }
+  /// Selected sub-text is always black at 70% opacity.
+  Color _cardSubText(bool isSelected, String themeMode) {
+    if (isSelected) return Colors.black.withOpacity(0.7);
     switch (themeMode) {
-      case 'night':
-        return const Color(0xFFFF4444).withOpacity(0.6);
-      case 'glow':
-        return const Color(0xFF00FFAA).withOpacity(0.6);
-      case 'day':
-      default:
-        return Colors.white60;
+      case 'night': return const Color(0xFFFF4444).withOpacity(0.6);
+      case 'glow':  return const Color(0xFF00FFAA).withOpacity(0.6);
+      default:      return Colors.white60;
     }
   }
 
-  /// Card border colour (unselected)
   Color _borderColor(bool isSelected, String themeMode, Color iconColor) {
     if (isSelected) return iconColor;
     switch (themeMode) {
-      case 'night':
-        return const Color(0xFFFF3333).withOpacity(0.25);
-      case 'glow':
-        return const Color(0xFF00FF88).withOpacity(0.25);
-      case 'day':
-      default:
-        return Colors.white.withOpacity(0.3);
+      case 'night': return const Color(0xFFFF3333).withOpacity(0.25);
+      case 'glow':  return const Color(0xFF00FF88).withOpacity(0.25);
+      default:      return Colors.white.withOpacity(0.3);
     }
   }
 
@@ -230,11 +191,9 @@ class _CompassStyleSelectorScreenState
   Widget build(BuildContext context) {
     final settings = Provider.of<SettingsService>(context);
     final themeMode = settings.iconThemeMode;
-
     final iconColor = settings.getIconColor(opacity: 1.0);
     final textColor = settings.getTextColor(opacity: 1.0);
     final textColorMuted = settings.getTextColor(opacity: 0.7);
-
     final gradientColors = _screenGradient(themeMode);
 
     return Scaffold(
@@ -310,16 +269,11 @@ class _CompassStyleSelectorScreenState
                           key: ValueKey(style.id),
                           style: style,
                           isSelected: isSelected,
-                          cardPreviewBackground:
-                              _cardPreviewBackground(themeMode),
-                          labelBackground: _cardLabelBackground(
-                              isSelected, themeMode, iconColor),
-                          labelText:
-                              _cardLabelText(isSelected, themeMode, iconColor),
-                          subText:
-                              _cardSubText(isSelected, themeMode, iconColor),
-                          borderColor:
-                              _borderColor(isSelected, themeMode, iconColor),
+                          cardPreviewBackground: _cardPreviewBackground(themeMode),
+                          labelBackground: _cardLabelBackground(isSelected, themeMode, iconColor),
+                          labelText: _cardLabelText(isSelected, themeMode),
+                          subText: _cardSubText(isSelected, themeMode),
+                          borderColor: _borderColor(isSelected, themeMode, iconColor),
                           iconColor: iconColor,
                           onTap: () async {
                             setState(() => selectedStyle = style.id);
@@ -362,16 +316,9 @@ class _CompassStyleSelectorScreenState
                       decoration: BoxDecoration(
                         color: iconColor.withOpacity(0.15),
                         shape: BoxShape.circle,
-                        border: Border.all(
-                          color: iconColor.withOpacity(0.4),
-                          width: 1,
-                        ),
+                        border: Border.all(color: iconColor.withOpacity(0.4), width: 1),
                       ),
-                      child: Icon(
-                        Icons.arrow_back,
-                        color: iconColor,
-                        size: 24,
-                      ),
+                      child: Icon(Icons.arrow_back, color: iconColor, size: 24),
                     ),
                   ),
                 ),
@@ -384,7 +331,7 @@ class _CompassStyleSelectorScreenState
   }
 }
 
-// ── Card widget ─────────────────────────────────────────────────────────────
+// ── Card widget ──────────────────────────────────────────────────────────────
 
 class _CompassStyleCard extends StatefulWidget {
   final CompassStyleInfo style;
@@ -422,7 +369,6 @@ class _CompassStyleCardState extends State<_CompassStyleCard>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-
     return RepaintBoundary(
       child: GestureDetector(
         onTap: widget.onTap,
@@ -435,25 +381,12 @@ class _CompassStyleCardState extends State<_CompassStyleCard>
               width: widget.isSelected ? 3 : 1,
             ),
             boxShadow: widget.isSelected
-                ? [
-                    BoxShadow(
-                      color: widget.iconColor.withOpacity(0.35),
-                      blurRadius: 16,
-                      spreadRadius: 2,
-                    ),
-                  ]
-                : [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
+                ? [BoxShadow(color: widget.iconColor.withOpacity(0.35), blurRadius: 16, spreadRadius: 2)]
+                : [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 5))],
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Compass preview
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(12.0),
@@ -474,12 +407,9 @@ class _CompassStyleCardState extends State<_CompassStyleCard>
                   ),
                 ),
               ),
-
-              // Label strip
               Container(
                 width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
                 decoration: BoxDecoration(
                   color: widget.labelBackground,
                   borderRadius: const BorderRadius.only(
@@ -506,11 +436,7 @@ class _CompassStyleCardState extends State<_CompassStyleCard>
                       padding: const EdgeInsets.symmetric(horizontal: 4),
                       child: Text(
                         widget.style.description,
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: widget.subText,
-                          height: 1.2,
-                        ),
+                        style: TextStyle(fontSize: 10, color: widget.subText, height: 1.2),
                         textAlign: TextAlign.center,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -518,11 +444,8 @@ class _CompassStyleCardState extends State<_CompassStyleCard>
                     ),
                     if (widget.isSelected) ...[
                       const SizedBox(height: 4),
-                      Icon(
-                        Icons.check_circle,
-                        color: widget.labelText,
-                        size: 18,
-                      ),
+                      // Check icon also black when selected
+                      const Icon(Icons.check_circle, color: Colors.black, size: 18),
                     ],
                   ],
                 ),

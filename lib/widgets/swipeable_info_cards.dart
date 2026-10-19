@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/location_service.dart';
@@ -39,15 +40,11 @@ class _SwipeableInfoCardsState extends State<SwipeableInfoCards> {
 
   void _snapToNearestItem() {
     if (_itemWidth == 0 || _isSnapping) return;
-
     final currentScroll = _scrollController.offset;
     final targetIndex = (currentScroll / _itemWidth).round();
     final targetScroll = targetIndex * _itemWidth;
-
     if ((currentScroll - targetScroll).abs() < 0.5) return;
-
     _isSnapping = true;
-
     _scrollController
         .animateTo(
           targetScroll,
@@ -68,7 +65,7 @@ class _SwipeableInfoCardsState extends State<SwipeableInfoCards> {
     }
   }
 
-  List<Widget> _buildAllItems(
+  List<_CardData> _buildAllCardData(
     TrackingService ts,
     SettingsService settings,
     LocalizationService loc,
@@ -78,131 +75,80 @@ class _SwipeableInfoCardsState extends State<SwipeableInfoCards> {
     final latitude  = widget.locationService.currentPosition?.latitude  ?? 0.0;
     final longitude = widget.locationService.currentPosition?.longitude ?? 0.0;
 
-    final List<Widget> items = [];
-
-    // ── TRACKING CARDS ───────────────────────────────────────────────────────
-    // TrackingService stores currentSpeed / avgSpeed / maxSpeed in km/h.
-    // UnitConverter.convertSpeed expects m/s, so divide by 3.6 ONCE here.
-    // Do NOT divide again anywhere else.
+    final List<_CardData> cards = [];
 
     if (settings.showSpeed && ts.isTracking) {
-      // FIX: was dividing by 3.6 in swipeable_info_cards AND the service
-      // already stored km/h — causing double-conversion (showed ~10× too low).
-      // Now: km/h → m/s → convertSpeed → display unit. Single conversion.
-      final converted = UnitConverter.convertSpeed(
-        ts.currentSpeed / 3.6,
-        settings.speedUnit,
-      );
-      items.add(_buildInfoItem(
-        settings: settings,
-        loc: loc,
+      final converted = UnitConverter.convertSpeed(ts.currentSpeed / 3.6, settings.speedUnit);
+      cards.add(_CardData(
         icon: Icons.speed_rounded,
         label: loc.translate('speed'),
         value: converted.toStringAsFixed(1),
         unit: settings.speedUnit,
       ));
     }
-
     if (settings.showDistance && ts.isTracking) {
-      // totalDistance is metres — convertDistance expects metres. No division needed.
-      final converted = UnitConverter.convertDistance(
-        ts.totalDistance,
-        settings.distanceUnit,
-      );
-      items.add(_buildInfoItem(
-        settings: settings,
-        loc: loc,
+      final converted = UnitConverter.convertDistance(ts.totalDistance, settings.distanceUnit);
+      cards.add(_CardData(
         icon: Icons.straighten_rounded,
         label: loc.translate('distance'),
         value: converted.toStringAsFixed(2),
         unit: _getDistanceUnitAbbreviation(settings.distanceUnit, loc),
       ));
     }
-
     if (settings.showMaxSpeed && ts.isTracking) {
-      // FIX: same double-conversion bug as currentSpeed above.
-      final converted = UnitConverter.convertSpeed(
-        ts.maxSpeed / 3.6,
-        settings.speedUnit,
-      );
-      items.add(_buildInfoItem(
-        settings: settings,
-        loc: loc,
+      final converted = UnitConverter.convertSpeed(ts.maxSpeed / 3.6, settings.speedUnit);
+      cards.add(_CardData(
         icon: Icons.flash_on,
         label: loc.translate('max_speed'),
         value: converted.toStringAsFixed(1),
         unit: settings.speedUnit,
       ));
     }
-
     if (settings.showMovingTime && ts.isTracking) {
-      items.add(_buildInfoItem(
-        settings: settings,
-        loc: loc,
+      cards.add(_CardData(
         icon: Icons.timer_rounded,
         label: loc.translate('moving'),
         value: ts.formattedTime,
         unit: '',
       ));
     }
-
     if (settings.showAvgSpeed && ts.isTracking) {
-      // FIX: same double-conversion bug as currentSpeed above.
-      final converted = UnitConverter.convertSpeed(
-        ts.avgSpeed / 3.6,
-        settings.speedUnit,
-      );
-      items.add(_buildInfoItem(
-        settings: settings,
-        loc: loc,
+      final converted = UnitConverter.convertSpeed(ts.avgSpeed / 3.6, settings.speedUnit);
+      cards.add(_CardData(
         icon: Icons.analytics_rounded,
         label: loc.translate('avg_speed'),
         value: converted.toStringAsFixed(1),
         unit: settings.speedUnit,
       ));
     }
-
-    // ── NON-TRACKING CARDS ───────────────────────────────────────────────────
-
     if (settings.showAccuracy) {
       final converted = UnitConverter.convertDistance(accuracy, settings.distanceUnit);
-      items.add(_buildInfoItem(
-        settings: settings,
-        loc: loc,
+      cards.add(_CardData(
         icon: Icons.my_location_rounded,
         label: loc.translate('accuracy'),
         value: '±${converted.toStringAsFixed(0)}',
         unit: _getDistanceUnitAbbreviation(settings.distanceUnit, loc),
       ));
     }
-
     if (settings.showAltitude) {
       final converted = UnitConverter.convertDistance(altitude, settings.distanceUnit);
-      items.add(_buildInfoItem(
-        settings: settings,
-        loc: loc,
+      cards.add(_CardData(
         icon: Icons.terrain_rounded,
         label: loc.translate('altitude'),
         value: converted.toStringAsFixed(0),
         unit: _getDistanceUnitAbbreviation(settings.distanceUnit, loc),
       ));
     }
-
     if (settings.showBearing) {
-      items.add(_buildInfoItem(
-        settings: settings,
-        loc: loc,
+      cards.add(_CardData(
         icon: Icons.navigation_rounded,
         label: loc.translate('bearing'),
         value: '${widget.heading.toInt()}',
         unit: '°',
       ));
     }
-
     if (settings.showLocation) {
-      items.add(_buildInfoItem(
-        settings: settings,
-        loc: loc,
+      cards.add(_CardData(
         icon: Icons.location_on_rounded,
         label: loc.translate('location'),
         value: latitude.toStringAsFixed(4),
@@ -210,12 +156,9 @@ class _SwipeableInfoCardsState extends State<SwipeableInfoCards> {
         subtitle: longitude.toStringAsFixed(4),
       ));
     }
-
     if (settings.showElevation) {
       final converted = UnitConverter.convertDistance(altitude, settings.distanceUnit);
-      items.add(_buildInfoItem(
-        settings: settings,
-        loc: loc,
+      cards.add(_CardData(
         icon: Icons.trending_up_rounded,
         label: loc.translate('elevation'),
         value: converted.toStringAsFixed(0),
@@ -223,16 +166,15 @@ class _SwipeableInfoCardsState extends State<SwipeableInfoCards> {
       ));
     }
 
-    return items;
+    return cards;
   }
 
   @override
   Widget build(BuildContext context) {
     return Consumer3<TrackingService, SettingsService, LocalizationService>(
       builder: (context, trackingService, settings, localization, child) {
-        final allItems = _buildAllItems(trackingService, settings, localization);
-
-        if (allItems.isEmpty) return const SizedBox.shrink();
+        final allCards = _buildAllCardData(trackingService, settings, localization);
+        if (allCards.isEmpty) return const SizedBox.shrink();
 
         return LayoutBuilder(
           builder: (context, constraints) {
@@ -253,11 +195,12 @@ class _SwipeableInfoCardsState extends State<SwipeableInfoCards> {
                   controller: _scrollController,
                   scrollDirection: Axis.horizontal,
                   physics: const BouncingScrollPhysics(),
-                  itemCount: allItems.length,
+                  itemCount: allCards.length,
                   itemBuilder: (context, index) {
+                    final card = allCards[index];
                     return SizedBox(
                       width: _itemWidth,
-                      child: allItems[index],
+                      child: _buildInfoCard(card, settings),
                     );
                   },
                 ),
@@ -269,55 +212,54 @@ class _SwipeableInfoCardsState extends State<SwipeableInfoCards> {
     );
   }
 
-  Widget _buildInfoItem({
-    required SettingsService settings,
-    required LocalizationService loc,
-    required IconData icon,
-    required String label,
-    required String value,
-    required String unit,
-    String? subtitle,
-  }) {
+  Widget _buildInfoCard(_CardData card, SettingsService settings) {
+    final iconColor  = settings.getIconColor(opacity: 0.95);
+    final textColor  = settings.getTextColor(opacity: 0.95);
+    final labelColor = settings.getTextColor(opacity: 0.85);
+
     return Container(
       alignment: Alignment.center,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            icon,
-            color: settings.getIconColor(opacity: 0.95),
-            size: 20,
-          ),
+          // Icon (no PRO badge)
+          Icon(card.icon, color: iconColor, size: 20),
+
           const SizedBox(height: 6),
+
+          // Label
           Text(
-            label,
+            card.label,
             style: TextStyle(
-              color: settings.getTextColor(opacity: 0.85),
+              color: labelColor,
               fontSize: 11,
               fontWeight: FontWeight.w500,
             ),
           ),
+
           const SizedBox(height: 4),
-          if (subtitle == null)
+
+          // Value
+          if (card.subtitle == null)
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.baseline,
               textBaseline: TextBaseline.alphabetic,
               children: [
                 Text(
-                  value,
+                  card.value,
                   style: TextStyle(
-                    color: settings.getTextColor(opacity: 0.95),
+                    color: textColor,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'monospace',
                   ),
                 ),
-                if (unit.isNotEmpty) ...[
+                if (card.unit.isNotEmpty) ...[
                   const SizedBox(width: 3),
                   Text(
-                    unit,
+                    card.unit,
                     style: TextStyle(
                       color: settings.getTextColor(opacity: 0.8),
                       fontSize: 11,
@@ -331,9 +273,9 @@ class _SwipeableInfoCardsState extends State<SwipeableInfoCards> {
             Column(
               children: [
                 Text(
-                  value,
+                  card.value,
                   style: TextStyle(
-                    color: settings.getTextColor(opacity: 0.95),
+                    color: textColor,
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'monospace',
@@ -341,7 +283,7 @@ class _SwipeableInfoCardsState extends State<SwipeableInfoCards> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  subtitle,
+                  card.subtitle!,
                   style: TextStyle(
                     color: settings.getTextColor(opacity: 0.85),
                     fontSize: 12,
@@ -355,4 +297,21 @@ class _SwipeableInfoCardsState extends State<SwipeableInfoCards> {
       ),
     );
   }
+}
+
+// ─── Data model ───────────────────────────────────────────────────────────────
+class _CardData {
+  final IconData icon;
+  final String label;
+  final String value;
+  final String unit;
+  final String? subtitle;
+
+  const _CardData({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.unit,
+    this.subtitle,
+  });
 }

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../services/settings_service.dart';
 import '../services/localization_service.dart';
 import '../services/location_service.dart';
+import '../services/ad_service.dart';
 import 'loading_screen.dart';
 import 'home_screen.dart';
 
@@ -23,6 +24,7 @@ class LanguageSelectorScreen extends StatefulWidget {
 
 class _LanguageSelectorScreenState extends State<LanguageSelectorScreen> {
   late String selectedLanguage;
+  bool _isContinuing = false;
 
   // Languages ordered by country power/influence (top to bottom)
   final List<LanguageOption> languages = [
@@ -208,7 +210,52 @@ class _LanguageSelectorScreenState extends State<LanguageSelectorScreen> {
     await prefs.setString('language', languageCode);
   }
 
+  void _goToLoadingScreen() {
+    if (!mounted) return;
+    print('🔄 LANGUAGE SELECTOR: Navigating to Loading Screen');
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => LoadingScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = 0.95;
+          const end = 1.0;
+          final scaleTween = Tween(begin: begin, end: end);
+          final scaleAnimation = animation.drive(scaleTween);
+
+          return FadeTransition(
+            opacity: animation,
+            child: ScaleTransition(
+              scale: scaleAnimation,
+              child: child,
+            ),
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 700),
+      ),
+    );
+  }
+
+  void _goToHomeScreen() {
+    if (!mounted) return;
+    print('🏠 LANGUAGE SELECTOR: Navigating to Home Screen');
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => const HomeScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+            opacity: animation,
+            child: child,
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 600),
+      ),
+    );
+  }
+
   Future<void> _handleContinue() async {
+    if (_isContinuing) return; // guard against double taps
+    _isContinuing = true;
+
     print('🚀 LANGUAGE SELECTOR: Continue button pressed');
     
     final prefs = await SharedPreferences.getInstance();
@@ -236,41 +283,17 @@ class _LanguageSelectorScreenState extends State<LanguageSelectorScreen> {
     }
 
     if (widget.isFirstLaunch) {
-      print('🔄 LANGUAGE SELECTOR: First launch - navigating to Loading Screen');
-      Navigator.of(context).pushReplacement(
-        PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) => LoadingScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            const begin = 0.95;
-            const end = 1.0;
-            final scaleTween = Tween(begin: begin, end: end);
-            final scaleAnimation = animation.drive(scaleTween);
-            
-            return FadeTransition(
-              opacity: animation,
-              child: ScaleTransition(
-                scale: scaleAnimation,
-                child: child,
-              ),
-            );
-          },
-          transitionDuration: const Duration(milliseconds: 700),
-        ),
+      print('🎬 LANGUAGE SELECTOR: First launch - showing interstitial before Loading Screen');
+      final adService = Provider.of<AdService>(context, listen: false);
+      // showInterstitial calls onDismissed immediately if no ad is loaded,
+      // so this never blocks the first-launch flow.
+      adService.showInterstitial(
+        onDismissed: () {
+          _goToLoadingScreen();
+        },
       );
     } else {
-      print('🏠 LANGUAGE SELECTOR: Not first launch - navigating to Home Screen');
-      Navigator.of(context).pushReplacement(
-        PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) => const HomeScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(
-              opacity: animation,
-              child: child,
-            );
-          },
-          transitionDuration: const Duration(milliseconds: 600),
-        ),
-      );
+      _goToHomeScreen();
     }
   }
 
