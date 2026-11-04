@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/compass_map_mode.dart';
 import 'dart:math' as math;
 
 class NeonCompass extends StatelessWidget {
@@ -11,42 +12,47 @@ class NeonCompass extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return MapHalo(halo: Colors.black, builder: (clear) => _buildCompass(context, clear));
+  }
+
+  Widget _buildCompass(BuildContext context, bool clear) {
     return Container(
       width: 300,
       height: 300,
-      decoration: const BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.black,
-      ),
+      decoration: clear
+          ? null
+          : const BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.black,
+            ),
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Outer neon glow layers
-          Container(
-            width: 310,
-            height: 310,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.cyan.withOpacity(0.6),
-                  blurRadius: 50,
-                  spreadRadius: 15,
-                ),
-                BoxShadow(
-                  color: Colors.pink.withOpacity(0.5),
-                  blurRadius: 70,
-                  spreadRadius: 20,
-                ),
-                BoxShadow(
-                  color: Colors.purple.withOpacity(0.3),
-                  blurRadius: 90,
-                  spreadRadius: 25,
-                ),
-              ],
+          if (!clear)
+            Container(
+              width: 310,
+              height: 310,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.cyan.withOpacity(0.6),
+                    blurRadius: 50,
+                    spreadRadius: 15,
+                  ),
+                  BoxShadow(
+                    color: Colors.pink.withOpacity(0.5),
+                    blurRadius: 70,
+                    spreadRadius: 20,
+                  ),
+                  BoxShadow(
+                    color: Colors.purple.withOpacity(0.3),
+                    blurRadius: 90,
+                    spreadRadius: 25,
+                  ),
+                ],
+              ),
             ),
-          ),
-          // Rotating neon rings
           Transform.rotate(
             angle: -heading * math.pi / 180,
             child: Container(
@@ -57,7 +63,6 @@ class NeonCompass extends StatelessWidget {
               ),
             ),
           ),
-          // Center glow with pulse effect
           Container(
             width: 90,
             height: 90,
@@ -73,7 +78,6 @@ class NeonCompass extends StatelessWidget {
               ),
             ),
           ),
-          // Middle glow ring
           Container(
             width: 60,
             height: 60,
@@ -92,7 +96,6 @@ class NeonCompass extends StatelessWidget {
               ],
             ),
           ),
-          // Center circle
           Container(
             width: 50,
             height: 50,
@@ -113,7 +116,6 @@ class NeonCompass extends StatelessWidget {
               ],
             ),
           ),
-          // Center dot
           Container(
             width: 12,
             height: 12,

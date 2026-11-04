@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/compass_map_mode.dart';
 import 'dart:math' as math;
 
 class TechCompass extends StatelessWidget {
@@ -11,11 +12,15 @@ class TechCompass extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return MapHalo(halo: Colors.black, builder: (clear) => _buildCompass(context, clear));
+  }
+
+  Widget _buildCompass(BuildContext context, bool clear) {
     return Container(
       width: 300,
       height: 300,
       child: CustomPaint(
-        painter: TechCompassPainter(heading: heading),
+        painter: TechCompassPainter(heading: heading, clear: clear),
       ),
     );
   }
@@ -24,7 +29,9 @@ class TechCompass extends StatelessWidget {
 class TechCompassPainter extends CustomPainter {
   final double heading;
 
-  TechCompassPainter({required this.heading});
+  final bool clear;
+
+  TechCompassPainter({required this.heading, this.clear = false});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -56,13 +63,13 @@ class TechCompassPainter extends CustomPainter {
     final shadowPaint = Paint()
       ..color = Colors.black.withOpacity(0.3)
       ..maskFilter = MaskFilter.blur(BlurStyle.normal, 4);
-    canvas.drawCircle(center, radius * 0.94, shadowPaint);
+    if (!clear) canvas.drawCircle(center, radius * 0.94, shadowPaint);
 
     // Draw black background - adjusted for new rim size
     final bgPaint = Paint()
       ..color = Color(0xFF1A1A1A)
       ..style = PaintingStyle.fill;
-    canvas.drawCircle(center, radius * 0.94, bgPaint);
+    if (!clear) canvas.drawCircle(center, radius * 0.94, bgPaint);
 
     // Draw fine inner circle detail - adjusted
     final detailCircle = Paint()
@@ -226,6 +233,6 @@ class TechCompassPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(TechCompassPainter oldDelegate) {
-    return oldDelegate.heading != heading;
+    return oldDelegate.heading != heading || oldDelegate.clear != clear;
   }
 }

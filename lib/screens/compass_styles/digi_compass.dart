@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/compass_map_mode.dart';
 import 'package:provider/provider.dart';
 import 'dart:math' as math;
 import '../../services/settings_service.dart';
@@ -13,13 +14,17 @@ class DigiCompass extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return MapHalo(halo: Colors.black, builder: (clear) => _buildCompass(context, clear));
+  }
+
+  Widget _buildCompass(BuildContext context, bool clear) {
     final settings = Provider.of<SettingsService>(context);
     
     return Container(
       width: 300,
       height: 300,
       child: CustomPaint(
-        painter: DigiCompassPainter(heading: heading, settings: settings),
+        painter: DigiCompassPainter(heading: heading, settings: settings, clear: clear),
       ),
     );
   }
@@ -29,7 +34,9 @@ class DigiCompassPainter extends CustomPainter {
   final double heading;
   final SettingsService settings;
 
-  DigiCompassPainter({required this.heading, required this.settings});
+  final bool clear;
+
+  DigiCompassPainter({required this.heading, required this.settings, this.clear = false});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -56,13 +63,13 @@ class DigiCompassPainter extends CustomPainter {
       ..shader = RadialGradient(
         colors: bgColors,
       ).createShader(Rect.fromCircle(center: center, radius: radius));
-    canvas.drawCircle(center, radius, bgPaint);
+    if (!clear) canvas.drawCircle(center, radius, bgPaint);
 
     // Draw outer circle with glow
     final glowPaint = Paint()
       ..color = primaryColor.withOpacity(0.3)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
-    canvas.drawCircle(center, radius + 4, glowPaint);
+    if (!clear) canvas.drawCircle(center, radius + 4, glowPaint);
 
     final outerCirclePaint = Paint()
       ..color = primaryColor
@@ -473,6 +480,7 @@ class DigiCompassPainter extends CustomPainter {
   @override
   bool shouldRepaint(DigiCompassPainter oldDelegate) {
     return oldDelegate.heading != heading ||
-           oldDelegate.settings.iconThemeMode != settings.iconThemeMode;
+           oldDelegate.settings.iconThemeMode != settings.iconThemeMode ||
+           oldDelegate.clear != clear;
   }
 }

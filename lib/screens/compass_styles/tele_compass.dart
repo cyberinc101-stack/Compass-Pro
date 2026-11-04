@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/compass_map_mode.dart';
 import 'dart:math' as math;
 
 class TeleCompass extends StatelessWidget {
@@ -11,11 +12,15 @@ class TeleCompass extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return MapHalo(halo: Colors.black, builder: (clear) => _buildCompass(context, clear));
+  }
+
+  Widget _buildCompass(BuildContext context, bool clear) {
     return Container(
       width: 300,
       height: 300,
       child: CustomPaint(
-        painter: TeleCompassPainter(heading: heading),
+        painter: TeleCompassPainter(heading: heading, clear: clear),
       ),
     );
   }
@@ -24,7 +29,9 @@ class TeleCompass extends StatelessWidget {
 class TeleCompassPainter extends CustomPainter {
   final double heading;
 
-  TeleCompassPainter({required this.heading});
+  final bool clear;
+
+  TeleCompassPainter({required this.heading, this.clear = false});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -42,7 +49,7 @@ class TeleCompassPainter extends CustomPainter {
       ..shader = RadialGradient(
         colors: [Color(0xFF1E1E1E), Color(0xFF0A0A0A)],
       ).createShader(Rect.fromCircle(center: center, radius: radius));
-    canvas.drawCircle(center, radius, bgPaint);
+    if (!clear) canvas.drawCircle(center, radius, bgPaint);
 
     // Draw outer white circle
     final outerCirclePaint = Paint()
@@ -294,6 +301,6 @@ class TeleCompassPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(TeleCompassPainter oldDelegate) {
-    return oldDelegate.heading != heading;
+    return oldDelegate.heading != heading || oldDelegate.clear != clear;
   }
 }

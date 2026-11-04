@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -9,6 +9,7 @@ import '../services/location_service.dart';
 import '../services/settings_service.dart';
 import '../services/weather_service.dart';
 import '../services/localization_service.dart';
+import '../services/compass_map_mode.dart';
 import '../widgets/heading_card.dart';
 import '../widgets/swipeable_info_cards.dart';
 import '../widgets/level_bubble.dart';
@@ -29,7 +30,10 @@ import 'compass_styles/tele_compass.dart';
 import 'compass_styles/digi_compass.dart';
 import 'backgrounds/classic_gradient_bg.dart';
 import 'backgrounds/map_background.dart';
+import 'package:flutter_map/flutter_map.dart' as fm;
+import 'package:latlong2/latlong.dart' as ll;
 import 'backgrounds/transparent_background.dart';
+import '../widgets/transparent_compass_overlay.dart';
 import 'backgrounds/weather_background.dart';
 import 'backgrounds/dark_mode_background.dart';
 import 'backgrounds/sunset_background.dart';
@@ -55,7 +59,8 @@ class _CompassScreenState extends State<CompassScreen> with WidgetsBindingObserv
   double _heading = 0;
   double _smoothHeading = 0;
   String _compassStyle = 'classic';
-  String _backgroundStyle = 'classic';
+  String _backgroundStyle = 'night';
+  bool _mapMode = CompassMapMode.on.value;
   StreamSubscription<CompassEvent>? _compassSubscription;
   bool _isInitialized = false;
   bool _stylesLoaded = false;
@@ -83,7 +88,7 @@ class _CompassScreenState extends State<CompassScreen> with WidgetsBindingObserv
   Future<void> _loadStylesSync() async {
     final prefs = await SharedPreferences.getInstance();
     final compass = prefs.getString('compass_style') ?? 'classic';
-    final background = prefs.getString('background_style') ?? 'classic';
+    final background = prefs.getString('background_style') ?? 'night';
     if (mounted) {
       setState(() {
         _compassStyle = compass;
@@ -170,7 +175,7 @@ class _CompassScreenState extends State<CompassScreen> with WidgetsBindingObserv
 
   Future<void> _loadBackgroundStyle() async {
     final prefs = await SharedPreferences.getInstance();
-    final newBackground = prefs.getString('background_style') ?? 'classic';
+    final newBackground = prefs.getString('background_style') ?? 'night';
     if (mounted && newBackground != _backgroundStyle) {
       setState(() => _backgroundStyle = newBackground);
     }
@@ -222,7 +227,42 @@ class _CompassScreenState extends State<CompassScreen> with WidgetsBindingObserv
     }
   }
 
+  Widget _buildOsmBackground(Widget child) {
+    final pos = Provider.of<LocationService>(context).currentPosition;
+    final center = pos != null ? ll.LatLng(pos.latitude, pos.longitude) : const ll.LatLng(0, 0);
+    return Stack(children: [
+      Positioned.fill(
+        child: fm.FlutterMap(
+          key: ValueKey(pos == null ? 'nopos' : 'pos'),
+          options: fm.MapOptions(initialCenter: center, initialZoom: pos != null ? 16 : 2),
+          children: [
+            fm.TileLayer(urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', userAgentPackageName: 'nz.co.compasspro.app'),
+            if (pos != null)
+              fm.MarkerLayer(markers: [
+                fm.Marker(point: center, width: 22, height: 22,
+                  child: Container(decoration: BoxDecoration(color: Colors.blue, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 3)))),
+              ]),
+            const fm.RichAttributionWidget(attributions: [fm.TextSourceAttribution('\u00A9 OpenStreetMap contributors')]),
+          ],
+        ),
+      ),
+      Positioned.fill(child: IgnorePointer(child: Container(color: Colors.black.withOpacity(0.3)))),
+      child,
+    ]);
+  }
+
   Widget _getBackgroundWidget(Widget child) {
+    if (_mapMode) {
+      return _buildOsmBackground(
+        DefaultTextStyle.merge(
+          style: TextStyle(shadows: const [Shadow(color: Colors.black87, blurRadius: 6), Shadow(color: Colors.black54, blurRadius: 14)]),
+          child: IconTheme.merge(
+            data: IconThemeData(shadows: const [Shadow(color: Colors.black87, blurRadius: 6), Shadow(color: Colors.black54, blurRadius: 14)]),
+            child: child,
+          ),
+        ),
+      );
+    }
     switch (_backgroundStyle) {
       case 'classic':     return ClassicGradientBackground(child: child);
       case 'map':         return MapBackground(child: child);
@@ -360,6 +400,28 @@ class _CompassScreenState extends State<CompassScreen> with WidgetsBindingObserv
             ),
 
             // ── Back button ───────────────────────────────────────────────
+            Positioned(
+              top: 8, right: 8,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    setState(() => _mapMode = !_mapMode);
+                    CompassMapMode.on.value = _mapMode;
+                  },
+                  borderRadius: BorderRadius.circular(30),
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: iconColor.withOpacity(0.3),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: iconColorLight, width: 1),
+                    ),
+                    child: Icon(_mapMode ? Icons.wallpaper : Icons.map, color: iconColor, size: 18),
+                  ),
+                ),
+              ),
+            ),
             if (widget.onBackPressed != null)
               Positioned(
                 top: 8, left: 8,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/compass_map_mode.dart';
 import 'dart:math' as math;
 
 class NauticalCompass extends StatelessWidget {
@@ -11,83 +12,89 @@ class NauticalCompass extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return MapHalo(halo: Colors.white, builder: (clear) => _buildCompass(context, clear));
+  }
+
+  Widget _buildCompass(BuildContext context, bool clear) {
     return Container(
       width: 300,
       height: 300,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Ocean background with waves effect
-          Container(
-            width: 300,
-            height: 300,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [
-                  Colors.blue.shade100,
-                  Colors.blue.shade300,
-                  Colors.blue.shade600,
-                ],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.blue.withOpacity(0.4),
-                  blurRadius: 20,
-                  spreadRadius: 5,
+          if (!clear)
+            Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    Colors.blue.shade100,
+                    Colors.blue.shade300,
+                    Colors.blue.shade600,
+                  ],
                 ),
-              ],
-            ),
-          ),
-          // Outer brass ring with 3D effect
-          Container(
-            width: 294,
-            height: 294,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  const Color(0xFFDAA520),
-                  const Color(0xFFB8860B),
-                  const Color(0xFF8B6914),
-                  const Color(0xFFB8860B),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.withOpacity(0.4),
+                    blurRadius: 20,
+                    spreadRadius: 5,
+                  ),
                 ],
               ),
             ),
-          ),
-          // Middle brass ring
-          Container(
-            width: 286,
-            height: 286,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: const Color(0xFFB8860B),
-            ),
-          ),
-          // Inner white circle with subtle texture
-          Container(
-            width: 270,
-            height: 270,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [
-                  Colors.white,
-                  Colors.grey.shade50,
-                ],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  blurRadius: 10,
-                  spreadRadius: -5,
+          HollowRing(
+            hollow: clear,
+            thickness: 12,
+            child: Container(
+              width: 294,
+              height: 294,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    const Color(0xFFDAA520),
+                    const Color(0xFFB8860B),
+                    const Color(0xFF8B6914),
+                    const Color(0xFFB8860B),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-          // Rotating compass rose
+          if (!clear)
+            Container(
+              width: 286,
+              height: 286,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFFB8860B),
+              ),
+            ),
+          if (!clear)
+            Container(
+              width: 270,
+              height: 270,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    Colors.white,
+                    Colors.grey.shade50,
+                  ],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 10,
+                    spreadRadius: -5,
+                  ),
+                ],
+              ),
+            ),
           Transform.rotate(
             angle: -heading * math.pi / 180,
             child: Container(
@@ -98,7 +105,6 @@ class NauticalCompass extends StatelessWidget {
               ),
             ),
           ),
-          // Center anchor with 3D effect
           Container(
             width: 56,
             height: 56,
@@ -127,7 +133,6 @@ class NauticalCompass extends StatelessWidget {
               size: 28,
             ),
           ),
-          // Anchor shadow for depth
           Positioned(
             child: Container(
               width: 48,

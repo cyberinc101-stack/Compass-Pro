@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/compass_map_mode.dart';
 import 'package:provider/provider.dart';
 import 'dart:math' as math;
 import '../../services/settings_service.dart';
@@ -13,15 +14,18 @@ class ThreeDCompass extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return MapHalo(halo: Colors.black, builder: (clear) => _buildCompass(context, clear));
+  }
+
+  Widget _buildCompass(BuildContext context, bool clear) {
     final settings = Provider.of<SettingsService>(context);
     final themeMode = settings.iconThemeMode;
-    
-    // Get theme-aware colors
+
     final outerRingColors = _getOuterRingColors(themeMode);
     final middleRingColors = _getMiddleRingColors(themeMode);
     final centerSphereColors = _getCenterSphereColors(themeMode);
     final shadowColor = _getShadowColor(themeMode);
-    
+
     return ClipOval(
       child: Container(
         width: 300,
@@ -30,45 +34,52 @@ class ThreeDCompass extends StatelessWidget {
         child: Stack(
           alignment: Alignment.center,
           children: [
-            // Outer 3D ring
-            Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: outerRingColors,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: shadowColor.withOpacity(0.5),
-                    blurRadius: 20,
-                    offset: const Offset(5, 10),
+            HollowRing(
+              hollow: clear,
+              thickness: 20,
+              child: Container(
+                width: 300,
+                height: 300,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: outerRingColors,
                   ),
-                  BoxShadow(
-                    color: settings.getIconColor(opacity: 0.3),
-                    blurRadius: 10,
-                    offset: const Offset(-3, -5),
-                  ),
-                ],
-              ),
-            ),
-            // Middle 3D ring
-            Container(
-              width: 280,
-              height: 280,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: middleRingColors,
+                  boxShadow: clear
+                      ? null
+                      : [
+                          BoxShadow(
+                            color: shadowColor.withOpacity(0.5),
+                            blurRadius: 20,
+                            offset: const Offset(5, 10),
+                          ),
+                          BoxShadow(
+                            color: settings.getIconColor(opacity: 0.3),
+                            blurRadius: 10,
+                            offset: const Offset(-3, -5),
+                          ),
+                        ],
                 ),
               ),
             ),
-            // Rotating compass face with 3D effect
+            HollowRing(
+              hollow: clear,
+              thickness: 10,
+              child: Container(
+                width: 280,
+                height: 280,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: middleRingColors,
+                  ),
+                ),
+              ),
+            ),
             ClipOval(
               child: Transform.rotate(
                 angle: -heading * math.pi / 180,
@@ -76,12 +87,11 @@ class ThreeDCompass extends StatelessWidget {
                   width: 260,
                   height: 260,
                   child: CustomPaint(
-                    painter: _ThreeDCompassPainter(settings: settings),
+                    painter: _ThreeDCompassPainter(settings: settings, clear: clear),
                   ),
                 ),
               ),
             ),
-            // Center 3D sphere
             Container(
               width: 70,
               height: 70,
@@ -100,7 +110,6 @@ class ThreeDCompass extends StatelessWidget {
                 ],
               ),
             ),
-            // Highlight on sphere
             Positioned(
               child: Container(
                 width: 30,
@@ -232,7 +241,9 @@ class ThreeDCompass extends StatelessWidget {
 class _ThreeDCompassPainter extends CustomPainter {
   final SettingsService settings;
 
-  _ThreeDCompassPainter({required this.settings});
+  final bool clear;
+
+  _ThreeDCompassPainter({required this.settings, this.clear = false});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -253,7 +264,7 @@ class _ThreeDCompassPainter extends CustomPainter {
     canvas.drawCircle(
       center,
       radius,
-      Paint()..color = backgroundColor,
+      Paint()..color = clear ? Colors.transparent : backgroundColor,
     );
 
     // Draw 3D raised markers
@@ -473,5 +484,5 @@ class _ThreeDCompassPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _ThreeDCompassPainter oldDelegate) => 
-      settings.iconThemeMode != oldDelegate.settings.iconThemeMode;
+      settings.iconThemeMode != oldDelegate.settings.iconThemeMode || clear != oldDelegate.clear;
 }

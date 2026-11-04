@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/compass_map_mode.dart';
 import 'dart:math' as math;
 
 class HighTechCompass extends StatelessWidget {
@@ -11,35 +12,41 @@ class HighTechCompass extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return MapHalo(halo: Colors.black, builder: (clear) => _buildCompass(context, clear));
+  }
+
+  Widget _buildCompass(BuildContext context, bool clear) {
     return Container(
       width: 300,
       height: 300,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Outer futuristic ring
           Container(
             width: 300,
             height: 300,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [
-                  const Color(0xFF0A0E27),
-                  const Color(0xFF1A1F3A),
-                ],
-              ),
+              gradient: clear
+                  ? null
+                  : RadialGradient(
+                      colors: [
+                        const Color(0xFF0A0E27),
+                        const Color(0xFF1A1F3A),
+                      ],
+                    ),
               border: Border.all(color: Colors.cyanAccent, width: 3),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.cyanAccent.withOpacity(0.3),
-                  blurRadius: 20,
-                  spreadRadius: 2,
-                ),
-              ],
+              boxShadow: clear
+                  ? null
+                  : [
+                      BoxShadow(
+                        color: Colors.cyanAccent.withOpacity(0.3),
+                        blurRadius: 20,
+                        spreadRadius: 2,
+                      ),
+                    ],
             ),
           ),
-          // Inner glow ring
           Container(
             width: 286,
             height: 286,
@@ -51,16 +58,15 @@ class HighTechCompass extends StatelessWidget {
               ),
             ),
           ),
-          // Dark background
-          Container(
-            width: 280,
-            height: 280,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: const Color(0xFF0D1117),
+          if (!clear)
+            Container(
+              width: 280,
+              height: 280,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFF0D1117),
+              ),
             ),
-          ),
-          // Rotating compass face
           Transform.rotate(
             angle: -heading * math.pi / 180,
             child: Container(
@@ -71,12 +77,10 @@ class HighTechCompass extends StatelessWidget {
               ),
             ),
           ),
-          // HUD overlay
           CustomPaint(
             size: const Size(300, 300),
             painter: _HUDPainter(),
           ),
-          // Center circle indicator (replaces the coordinate display)
           Container(
             width: 20,
             height: 20,
@@ -97,7 +101,6 @@ class HighTechCompass extends StatelessWidget {
               ],
             ),
           ),
-          // Small center dot
           Container(
             width: 6,
             height: 6,

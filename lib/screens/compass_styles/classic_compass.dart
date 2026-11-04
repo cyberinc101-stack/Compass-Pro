@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/compass_map_mode.dart';
 import 'package:provider/provider.dart';
 import 'dart:math' as math;
 import '../../services/settings_service.dart';
@@ -13,6 +14,10 @@ class ClassicCompass extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return MapHalo(halo: Colors.white, builder: (clear) => _buildCompass(context, clear));
+  }
+
+  Widget _buildCompass(BuildContext context, bool clear) {
     final settings = Provider.of<SettingsService>(context);
     final themeMode = settings.iconThemeMode;
     
@@ -35,10 +40,10 @@ class ClassicCompass extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(color: outerBorderColor, width: 8),
-              gradient: RadialGradient(
+              gradient: clear ? null : RadialGradient(
                 colors: gradientColors,
               ),
-              boxShadow: [
+              boxShadow: clear ? null : [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.3),
                   blurRadius: 15,

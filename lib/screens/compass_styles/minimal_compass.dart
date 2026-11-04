@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/compass_map_mode.dart';
 import 'dart:math' as math;
 
 class MinimalCompass extends StatelessWidget {
@@ -11,13 +12,17 @@ class MinimalCompass extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return MapHalo(halo: Colors.white, builder: (clear) => _buildCompass(context, clear));
+  }
+
+  Widget _buildCompass(BuildContext context, bool clear) {
     return Container(
       width: 300,
       height: 300,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.white,
-        boxShadow: [
+        color: clear ? Colors.transparent : Colors.white,
+        boxShadow: clear ? null : [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
             blurRadius: 20,
@@ -34,7 +39,7 @@ class MinimalCompass extends StatelessWidget {
             height: 290,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.black12, width: 2),
+              border: Border.all(color: clear ? Colors.black54 : Colors.black12, width: 2),
             ),
           ),
           // Inner subtle circle

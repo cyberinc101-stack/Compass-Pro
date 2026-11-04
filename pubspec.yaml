@@ -1,8 +1,7 @@
 name: compass_pro
 description: Professional compass application with advanced features
 publish_to: 'none'
-version: 1.0.4+12
-
+version: 1.0.5+14
 environment:
   sdk: '>=3.3.0 <4.0.0'
 
@@ -42,7 +41,7 @@ dependencies:
   # v9.0.0+ required for Google Play Billing Library 8 compliance.
   # Pinned above the bare 9.0.0 release, which had a reported restore-purchases
   # regression on Android that was fixed in later 9.x patches.
-  purchases_flutter: ^9.10.0
+  purchases_flutter: ^9.15.0
 
   # Ads
   google_mobile_ads: ^5.1.0

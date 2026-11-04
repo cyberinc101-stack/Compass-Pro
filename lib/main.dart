@@ -24,9 +24,6 @@ void main() async {
 
   final prefs = await SharedPreferences.getInstance();
 
-  // TEMPORARY: Remove after language selector has been seen once
-  await prefs.remove('has_seen_language_selector');
-
   final locationService = LocationService();
   await locationService.initialize();
 

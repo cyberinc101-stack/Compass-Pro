@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/compass_map_mode.dart';
 import 'dart:math' as math;
 
 class ModernCompass extends StatelessWidget {
@@ -11,52 +12,54 @@ class ModernCompass extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return MapHalo(halo: Colors.white, builder: (clear) => _buildCompass(context, clear));
+  }
+
+  Widget _buildCompass(BuildContext context, bool clear) {
     return Container(
       width: 300,
       height: 300,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Outer glow ring
-          Container(
-            width: 310,
-            height: 310,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.blue.withOpacity(0.3),
-                  blurRadius: 30,
-                  spreadRadius: 10,
-                ),
-              ],
+          if (!clear)
+            Container(
+              width: 310,
+              height: 310,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.withOpacity(0.3),
+                    blurRadius: 30,
+                    spreadRadius: 10,
+                  ),
+                ],
+              ),
             ),
-          ),
-          // Main circle
           Container(
             width: 300,
             height: 300,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.white,
+              color: clear ? Colors.transparent : Colors.white,
               border: Border.all(color: Colors.blue.shade700, width: 4),
             ),
           ),
-          // Inner gradient circle
-          Container(
-            width: 280,
-            height: 280,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [
-                  Colors.blue.shade50,
-                  Colors.white,
-                ],
+          if (!clear)
+            Container(
+              width: 280,
+              height: 280,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    Colors.blue.shade50,
+                    Colors.white,
+                  ],
+                ),
               ),
             ),
-          ),
-          // Rotating compass face
           Transform.rotate(
             angle: -heading * math.pi / 180,
             child: Container(
@@ -67,7 +70,6 @@ class ModernCompass extends StatelessWidget {
               ),
             ),
           ),
-          // Enhanced center design
           Container(
             width: 68,
             height: 68,
@@ -111,7 +113,6 @@ class ModernCompass extends StatelessWidget {
               ),
             ),
           ),
-          // Center dot for precision
           Container(
             width: 6,
             height: 6,

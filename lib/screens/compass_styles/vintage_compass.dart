@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/compass_map_mode.dart';
 import 'dart:math' as math;
 
 class VintageCompass extends StatelessWidget {
@@ -11,67 +12,74 @@ class VintageCompass extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return MapHalo(halo: Colors.white, builder: (clear) => _buildCompass(context, clear));
+  }
+
+  Widget _buildCompass(BuildContext context, bool clear) {
     return Container(
       width: 300,
       height: 300,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Aged paper background with texture
-          Container(
-            width: 300,
-            height: 300,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [
-                  const Color(0xFFF5E6D3),
-                  const Color(0xFFE8D4B8),
-                  const Color(0xFFD4B896),
-                  const Color(0xFFC4A882),
-                ],
-                stops: const [0.0, 0.4, 0.7, 1.0],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.4),
-                  blurRadius: 20,
-                  spreadRadius: 5,
+          if (!clear)
+            Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFFF5E6D3),
+                    const Color(0xFFE8D4B8),
+                    const Color(0xFFD4B896),
+                    const Color(0xFFC4A882),
+                  ],
+                  stops: const [0.0, 0.4, 0.7, 1.0],
                 ),
-                BoxShadow(
-                  color: const Color(0xFF8B7355).withOpacity(0.2),
-                  blurRadius: 40,
-                  spreadRadius: -5,
-                ),
-              ],
-            ),
-          ),
-          // Weathered edge with 3D effect
-          Container(
-            width: 294,
-            height: 294,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  const Color(0xFF9B8265),
-                  const Color(0xFF8B7355),
-                  const Color(0xFF6B5845),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.4),
+                    blurRadius: 20,
+                    spreadRadius: 5,
+                  ),
+                  BoxShadow(
+                    color: const Color(0xFF8B7355).withOpacity(0.2),
+                    blurRadius: 40,
+                    spreadRadius: -5,
+                  ),
                 ],
               ),
             ),
-          ),
-          Container(
-            width: 286,
-            height: 286,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: const Color(0xFFE8D4B8),
+          HollowRing(
+            hollow: clear,
+            thickness: 8,
+            child: Container(
+              width: 294,
+              height: 294,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    const Color(0xFF9B8265),
+                    const Color(0xFF8B7355),
+                    const Color(0xFF6B5845),
+                  ],
+                ),
+              ),
             ),
           ),
-          // Rotating vintage compass rose
+          if (!clear)
+            Container(
+              width: 286,
+              height: 286,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFFE8D4B8),
+              ),
+            ),
           Transform.rotate(
             angle: -heading * math.pi / 180,
             child: Container(
@@ -82,7 +90,6 @@ class VintageCompass extends StatelessWidget {
               ),
             ),
           ),
-          // Center ornament with depth
           Container(
             width: 66,
             height: 66,
@@ -115,7 +122,7 @@ class VintageCompass extends StatelessWidget {
             ),
             child: const Center(
               child: Text(
-                '✶',
+                '\u2736',
                 style: TextStyle(
                   color: Color(0xFFD4AF37),
                   fontSize: 32,

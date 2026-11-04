@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/compass_map_mode.dart';
 import 'package:provider/provider.dart';
 import 'dart:math' as math;
 import '../../services/settings_service.dart';
@@ -13,13 +14,17 @@ class NavCompass extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return MapHalo(halo: Colors.black, builder: (clear) => _buildCompass(context, clear));
+  }
+
+  Widget _buildCompass(BuildContext context, bool clear) {
     final settings = Provider.of<SettingsService>(context);
     
     return Container(
       width: 300,
       height: 300,
       child: CustomPaint(
-        painter: NavCompassPainter(heading: heading, settings: settings),
+        painter: NavCompassPainter(heading: heading, settings: settings, clear: clear),
       ),
     );
   }
@@ -29,7 +34,9 @@ class NavCompassPainter extends CustomPainter {
   final double heading;
   final SettingsService settings;
 
-  NavCompassPainter({required this.heading, required this.settings});
+  final bool clear;
+
+  NavCompassPainter({required this.heading, required this.settings, this.clear = false});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -59,7 +66,7 @@ class NavCompassPainter extends CustomPainter {
       ..shader = RadialGradient(
         colors: bgColors,
       ).createShader(Rect.fromCircle(center: center, radius: radius));
-    canvas.drawCircle(center, radius, bgPaint);
+    if (!clear) canvas.drawCircle(center, radius, bgPaint);
 
     // Draw outer circle
     final outerCirclePaint = Paint()
@@ -355,6 +362,7 @@ class NavCompassPainter extends CustomPainter {
   @override
   bool shouldRepaint(NavCompassPainter oldDelegate) {
     return oldDelegate.heading != heading ||
-           oldDelegate.settings.iconThemeMode != settings.iconThemeMode;
+           oldDelegate.settings.iconThemeMode != settings.iconThemeMode ||
+           oldDelegate.clear != clear;
   }
 }

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/premium_service.dart';
@@ -7,6 +7,7 @@ import '../services/settings_service.dart';
 import '../services/ad_service.dart';
 import '../widgets/bottom_navigation.dart';
 import '../widgets/ad_banner_widget.dart';
+import '../widgets/brand_loader.dart';
 import 'compass_screen.dart';
 import 'compass_style_selector_screen.dart';
 import 'background_selector_screen.dart';
@@ -131,11 +132,12 @@ class _HomeScreenState extends State<HomeScreen> {
       if (mounted) setState(() => _compassKey++);
       adService.onNavigation();
     } else if (index == 5) {
+      final bgPrefs = await SharedPreferences.getInstance();
       await Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) =>
-              BackgroundSelectorScreen(currentBackground: 'night_sky'),
+              BackgroundSelectorScreen(currentBackground: bgPrefs.getString('background_style') ?? 'night'),
         ),
       );
       if (mounted) setState(() => _compassKey++);
@@ -208,58 +210,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     if (!_isInitialized) {
-      final settings = Provider.of<SettingsService>(context, listen: false);
-      final iconThemeMode = settings.iconThemeMode ?? 'default';
-      final isDay = _isDay();
-      final bgColor = _getBackgroundColor(iconThemeMode, isDay);
-      final textColor = _getTextColor(iconThemeMode, isDay);
-      final accentColor = _getAccentColor(iconThemeMode, isDay);
-
-      return Scaffold(
-        backgroundColor: bgColor,
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0.0, end: 1.0),
-                duration: const Duration(milliseconds: 1500),
-                curve: Curves.easeInOut,
-                builder: (context, value, child) => Transform.rotate(
-                  angle: value * 6.28319,
-                  child: Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                          color: accentColor.withOpacity(0.3), width: 2),
-                    ),
-                    child: Icon(Icons.explore, size: 64, color: accentColor),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: 40,
-                height: 40,
-                child: CircularProgressIndicator(
-                    valueColor:
-                        AlwaysStoppedAnimation<Color>(accentColor),
-                    strokeWidth: 3),
-              ),
-              const SizedBox(height: 24),
-              Text('Initializing Compass Pro...',
-                  style: TextStyle(
-                      color: textColor.withOpacity(0.9),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600)),
-              const SizedBox(height: 8),
-              Text('Getting your location ready',
-                  style: TextStyle(
-                      color: textColor.withOpacity(0.6), fontSize: 13)),
-            ],
-          ),
-        ),
+      return const BrandLoader(
+        animateIn: false,
+        status: 'Getting your location ready...',
       );
     }
 

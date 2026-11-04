@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/compass_map_mode.dart';
 import 'dart:math' as math;
 
 class GradientCompass extends StatelessWidget {
@@ -11,73 +12,81 @@ class GradientCompass extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return MapHalo(halo: Colors.black, builder: (clear) => _buildCompass(context, clear));
+  }
+
+  Widget _buildCompass(BuildContext context, bool clear) {
     return Container(
       width: 300,
       height: 300,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Outer glow
-          Container(
-            width: 320,
-            height: 320,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [
-                  Colors.purple.withOpacity(0.3),
-                  Colors.transparent,
-                ],
+          if (!clear)
+            Container(
+              width: 320,
+              height: 320,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    Colors.purple.withOpacity(0.3),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          HollowRing(
+            hollow: clear,
+            thickness: 20,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: SweepGradient(
+                  colors: [
+                    Colors.purple,
+                    Colors.blue,
+                    Colors.cyan,
+                    Colors.green,
+                    Colors.yellow,
+                    Colors.orange,
+                    Colors.red,
+                    Colors.pink,
+                    Colors.purple,
+                  ],
+                  transform: GradientRotation(-heading * math.pi / 180),
+                ),
+                boxShadow: clear
+                    ? null
+                    : [
+                        BoxShadow(
+                          color: Colors.purple.withOpacity(0.5),
+                          blurRadius: 20,
+                          spreadRadius: 5,
+                        ),
+                      ],
               ),
             ),
           ),
-          // Main compass circle with animated gradient
-          Container(
-            width: 300,
-            height: 300,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: SweepGradient(
-                colors: [
-                  Colors.purple,
-                  Colors.blue,
-                  Colors.cyan,
-                  Colors.green,
-                  Colors.yellow,
-                  Colors.orange,
-                  Colors.red,
-                  Colors.pink,
-                  Colors.purple,
+          if (!clear)
+            Container(
+              width: 260,
+              height: 260,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.black87,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.5),
+                    blurRadius: 15,
+                    spreadRadius: -5,
+                    offset: const Offset(0, 0),
+                  ),
                 ],
-                transform: GradientRotation(-heading * math.pi / 180),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.purple.withOpacity(0.5),
-                  blurRadius: 20,
-                  spreadRadius: 5,
-                ),
-              ],
             ),
-          ),
-          // Inner circle
-          Container(
-            width: 260,
-            height: 260,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.black87,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.5),
-                  blurRadius: 15,
-                  spreadRadius: -5,
-                  offset: const Offset(0, 0),
-                ),
-              ],
-            ),
-          ),
-          // Rotating markers
           Transform.rotate(
             angle: -heading * math.pi / 180,
             child: Container(
@@ -88,7 +97,6 @@ class GradientCompass extends StatelessWidget {
               ),
             ),
           ),
-          // Enhanced center circle with 3D effect
           Container(
             width: 70,
             height: 70,
@@ -116,7 +124,6 @@ class GradientCompass extends StatelessWidget {
               ],
             ),
           ),
-          // Inner rim for depth
           Container(
             width: 62,
             height: 62,
@@ -128,20 +135,17 @@ class GradientCompass extends StatelessWidget {
               ),
             ),
           ),
-          // Navigation icon with glow
           Container(
             width: 50,
             height: 50,
             child: Stack(
               alignment: Alignment.center,
               children: [
-                // Icon glow
                 Icon(
                   Icons.navigation,
                   color: Colors.white.withOpacity(0.3),
                   size: 36,
                 ),
-                // Main icon
                 Icon(
                   Icons.navigation,
                   color: Colors.white,

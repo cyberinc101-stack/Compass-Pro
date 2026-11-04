@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/compass_map_mode.dart';
 import 'package:provider/provider.dart';
 import 'dart:math' as math;
 import '../../services/settings_service.dart';
@@ -13,6 +14,10 @@ class DigitalCompass extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return MapHalo(halo: Colors.black, builder: (clear) => _buildCompass(context, clear));
+  }
+
+  Widget _buildCompass(BuildContext context, bool clear) {
     final settings = Provider.of<SettingsService>(context);
     
     return Container(
